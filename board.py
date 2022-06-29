@@ -9,30 +9,30 @@ class setUp:
         self.black_captives=[]
 
         white_rook_1 = Rook('r',0,0,'w')
-        white_rook_2 = Rook('r',0,7,'w')
-        white_knight_1 = Knight('h',0,1,'w')#name is h and stands for horse, k is already taken for king
-        white_knight_2 = Knight('h',0,6,'w')
-        white_bishop_1 = Bishop('b',0,2,'w')
-        white_bishop_2 = Bishop('b',0,5,'w')
-        white_queen = Queen('q',0,3,'w')
-        white_king = King('k',0,2,'w')
+        white_rook_2 = Rook('r',7,0,'w')
+        white_knight_1 = Knight('h',1,0,'w')#name is h and stands for horse, k is already taken for king
+        white_knight_2 = Knight('h',6,0,'w')
+        white_bishop_1 = Bishop('b',2,0,'w')
+        white_bishop_2 = Bishop('b',5,0,'w')
+        white_queen = Queen('q',3,0,'w')
+        white_king = King('k',2,0,'w')
         
         white_pawns = []
         for i in range(8):
-            white_pawns.append(Pawn('p',1,i,'w'))
+            white_pawns.append(Pawn('p',i,1,'w'))
         
         black_rook_1 = Rook('r',7,0,'b')
         black_rook_2 = Rook('r',7,7,'b')
         black_knight_1 = Knight('h',7,1,'b')#name is h and stands for horse, k is already taken for king
         black_knight_2 = Knight('h',7,6,'b')
         black_bishop_1 = Bishop('b',7,2,'b')
-        black_bishop_2 = Bishop('b',7,5,'b')
+        black_bishop_2 = Bishop('b',7,4,'b')
         black_queen = Queen('q',7,3,'b')
         black_king= King('k',7,2,'b')
         
         black_pawns = []
         for i in range(8):
-            black_pawns.append(Pawn('p',6,i,'b'))
+            black_pawns.append(Pawn('p',i,6,'b'))
     
         
 
@@ -45,7 +45,7 @@ class setUp:
 
             [0, 0, 0,0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, white_bishop_1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0],
 
             [black_pawns[0], black_pawns[1],black_pawns[2], black_pawns[3],black_pawns[4], black_pawns[5],
@@ -54,49 +54,56 @@ class setUp:
             [black_rook_1, black_knight_1,black_bishop_1, black_queen, black_king, black_bishop_2,
             black_knight_2, black_rook_2]
             ]
-     # returns all horizonatal fields with coordinates, the piece can move to
+
+     
+    def friendly_fire_preventer(self,attacks,team):
+        
+        for item in (attacks[:]):
+            if self.board[item[1]][item[0]].get_team()==team:
+                attacks.remove(item)
+        return attacks
+
+        # returns all horizonatal fields with coordinates, the piece can move to
     def vertical_moves(self,column,row):
         """the list range will be returned at the end and will contain
         in wich range the piece is allowed to move"""
         
         
         line=(self.board[column])
-        team=self.board[column][row].get_team()
-        range_interval_piece=[]
-        range_piece=[]
+        range_interval_piece=[0,0]
+        attacks=[]
 
-        if team =='w':
-            range_interval_piece = self.white_move_helper(row,line)
-        else:
-            range_interval_piece = self.black_move_helper(row,line)#make to array
+        
+        range_interval_piece = self.move_helper(row,line)
+        
         for i in range(range_interval_piece[0],range_interval_piece[1]+1):
-            range_piece.append((i,column))
-        return range_piece
+            attacks.append((i,column))
+        return attacks
+    
+    
+
+
     #returns alll horizontal fields the piece can move to
     def horizontal_moves(self,column,row):
-        line=[]
-        team=self.board[column][row].get_team()
+        line=[0,0]
         for i in range(8):
             line.append(self.board[i][row])
         
         range_interval_piece=[]
-        range_piece=[]
+        attacks=[]
 
-        if team =='w':
-            range_interval_piece = self.white_move_helper(column,line)
-        else:
-            range_interval_piece = self.black_move_helper(column,line)
+        range_interval_piece = self.move_helper(row,line)
         for i in range(range_interval_piece[0],range_interval_piece[1]+1):
-            range_piece.append((i,column))
-        return range_piece
+            attacks.append((i,column))
+        return attacks
     #returns diagonal moves
     def diagonal1(self,column,row):
         #diagonal from left top to right bottom
         
         start_row=0
         start_column=0
-        range_of_piece=[0,0]
-        range_piece=[]
+        range_interval_piece=[0,0]
+        attacks=[]
         if row>column:
             start_row=row-column
         elif row<column:
@@ -110,23 +117,20 @@ class setUp:
             line.append(self.board[b][a])
             b+=1
             a+=1
-        if self.board[column][row].get_team()=='w':
-            range_of_piece=self.white_move_helper(position,line)
-        else:
-            range_of_piece=self.black_move_helper(position,line)
+        range_interval_piece = self.move_helper(position,line)
         
-        for i in range(range_of_piece[0],range_of_piece[1]+1):
-            range_piece.append((start_row+i,start_column+i))
+        for i in range(range_interval_piece[0],range_interval_piece[1]+1):
+            attacks.append((start_row+i,start_column+i))
 
         
-        return range_piece
+        return attacks
     def diagonal2(self,column,row):
         #diagonal starts at the left bottom to right top
         
         start_row=0
         start_column=7
-        range_of_piece=[0,0]
-        range_piece=[]
+        range_interval_piece=[0,0]
+        attacks=[]
         if row+column<7:
             start_column=row+column
             
@@ -141,16 +145,13 @@ class setUp:
             line.append(self.board[b][a])
             b-=1
             a+=1
-        if self.board[column][row].get_team()=='w':
-            range_of_piece=self.white_move_helper(position,line)
-        else:
-            range_of_piece=self.black_move_helper(position,line)
+        range_interval_piece = self.move_helper(position,line)
         
-        for i in range(range_of_piece[0],range_of_piece[1]+1):
-            range_piece.append((start_row+i,start_column-i))
+        for i in range(range_interval_piece[0],range_interval_piece[1]+1):
+            attacks.append((start_row+i,start_column-i))
 
         
-        return range_piece
+        return attacks
     
     def horse_moves(self,column,row,team):
         #all hores moves(horizontal,vertical)
@@ -160,13 +161,24 @@ class setUp:
             x=item[0]+row 
             y=item[1]+column 
             if x in range(0,8) and y in range(0,8) and not self.board[y][x].get_team()== team:
-                attacks.append[(x,y)]
-
-
-
-    def white_move_helper(self,position,line):
+                attacks.append((x,y))
+    '''fields that are being attacked by the pawn, but may not be movable'''
+    def pawn_attacks(self,column,row,team):
+        attacks=[]
+        if team=='w':
+            if column+1<8 and row+1<8:
+                attacks.append((row+1,column+1))
+            if column+1<8 and row-1<=0:
+                attacks.append((row-1,column+1))
+        elif team =='b':
+            if column-1<=0 and row+1<8:
+                attacks.append((row+1,column-1))
+            if column-1<=0 and row-1<=0:
+                attacks.append((row-1,column-1))
+        return attacks
+    
+    def move_helper(self, position,line):
         range_of_piece=[0,0]
-
 
         left=(line[0:position])
         left.reverse()
@@ -177,11 +189,8 @@ class setUp:
                 if left[i]==0:
                     range_of_piece[0]=(len(left)-1-i)
                     continue
-                elif left[i].get_team()=='b':
+                else:
                     range_of_piece[0]=(len(left)-1-i)#Player can move fields where the opponent is standing
-                    break
-                elif left[i].get_team()=='w':
-                    range_of_piece[0]=(len(left)-i)#Player cant move to fields where an allied figure stands
                     break
         else:
             range_of_piece[0]=(position)
@@ -191,60 +200,19 @@ class setUp:
                     range_of_piece[1]=(position+i+1)
 
                     continue
-                elif right[i].get_team()=='b':
+                else:
                     range_of_piece[1]=(position+i+1)
-                    break
-                elif right[i].get_team()=='w':
-                    range_of_piece[1]=(position+i)
                     break
         else:
             range_of_piece[1]=(position)
         return range_of_piece
-    
 
-
-    def black_move_helper(self,position,line):#problem
-        range_of_piece=[0,0]
-
-
-        left=(line[0:position])
-        left.reverse()  
-
-        right=line[position+1:8]
-        if left:
-            for i in range(len(left)):
-                if left[i]==0:
-                    range_of_piece[0] = (len(left)-1-i)
-                    continue
-                elif left[i].get_team()=='w':
-                    range_of_piece[0] = (len(left)-1-i)#Player can move fields where the opponent is standing
-                    break
-                elif left[i].get_team()=='b':
-                    range_of_piece[0] = (len(left)-i)#Player cant move to fields where an allied figure stands
-                    break
-        else:
-            range_of_piece = (position)
-        if right:       
-            for i in range(len(right)):
-                if right[i]==0:
-                    range_of_piece[1] = (position+i+1)
-                    continue
-                elif right[i].get_team()=='w':
-                    range_of_piece[1] = (position+i+1)
-                    break
-                elif right[i].get_team()=='b':
-                    range_of_piece[1] = (position+i)
-                    break
-        else:
-            range_of_piece[1] = (position)
-        return range_of_piece
 
             
 
 chess=setUp()
 #print(chess.horizontal_moves(2,3))
-print(chess.diagonal1(4,3))
-print(chess.diagonal2(4,3))
+print(chess.board[4][3].attacks(chess))
 
 
                     
