@@ -1,4 +1,4 @@
-from re import X
+
 from pieces import Rook,Queen,Pawn,Bishop,King,Knight
 class setUp:
     def __init__(self):
@@ -54,6 +54,15 @@ class setUp:
             [black_rook_1, black_knight_1,black_bishop_1, black_queen, black_king, black_bishop_2,
             black_knight_2, black_rook_2]
             ]
+        #returns all attacks of the team
+    def get_all_attacks(self,team):
+        attacks=[]
+
+        for row in self.board:
+            for field in row:
+                if field !=0 and field.get_team()==team and field not in attacks:
+                    attacks.extend(field.attacks(self))
+        return attacks
 
      
     def friendly_fire_preventer(self,attacks,team):
@@ -77,7 +86,8 @@ class setUp:
         range_interval_piece = self.move_helper(row,line)
         
         for i in range(range_interval_piece[0],range_interval_piece[1]+1):
-            attacks.append((i,column))
+            if (i,column)!=(row,column):
+                attacks.append((i,column))
         return attacks
     
     
@@ -94,7 +104,8 @@ class setUp:
 
         range_interval_piece = self.move_helper(row,line)
         for i in range(range_interval_piece[0],range_interval_piece[1]+1):
-            attacks.append((i,column))
+            if (i,column)!=(row,column):
+                attacks.append((i,column))
         return attacks
     #returns diagonal moves
     def diagonal1(self,column,row):
@@ -120,7 +131,8 @@ class setUp:
         range_interval_piece = self.move_helper(position,line)
         
         for i in range(range_interval_piece[0],range_interval_piece[1]+1):
-            attacks.append((start_row+i,start_column+i))
+            if (start_row+i,start_column+i)!=(row,column):
+                attacks.append((start_row+i,start_column+i))
 
         
         return attacks
@@ -148,20 +160,22 @@ class setUp:
         range_interval_piece = self.move_helper(position,line)
         
         for i in range(range_interval_piece[0],range_interval_piece[1]+1):
-            attacks.append((start_row+i,start_column-i))
+            if (start_row+i,start_column-i)!=(row,column):
+                attacks.append((start_row+i,start_column-i))
 
         
         return attacks
     
-    def horse_moves(self,column,row,team):
+    def horse_moves(self,column,row):
         #all hores moves(horizontal,vertical)
         moves=[(2,1),(2,-1),(-2,1),(-2,-1),(1,2),(-1,2),(1,-2),(-1,2)]
         attacks=[]
         for item in moves:
             x=item[0]+row 
             y=item[1]+column 
-            if x in range(0,8) and y in range(0,8) and not self.board[y][x].get_team()== team:
+            if x in range(0,8) and y in range(0,8):
                 attacks.append((x,y))
+        return attacks
     '''fields that are being attacked by the pawn, but may not be movable'''
     def pawn_attacks(self,column,row,team):
         attacks=[]
@@ -176,7 +190,32 @@ class setUp:
             if column-1<=0 and row-1<=0:
                 attacks.append((row-1,column-1))
         return attacks
-    
+    def pawn_moves(self,attacks,team,column, row):
+        viable_moves=[]
+        viable_moves.append(self.friendly_fire_preventer(attacks,team))
+        if team =='w':
+            if self.board[column+1][row]==0:
+                viable_moves.append((row,column+1))
+                if self.board[column+2][row]==0 and column==1:
+                    viable_moves.append((row,column+2))
+
+        if team =='b':
+            if self.board[column-1][row]==0:
+                viable_moves.append((row,column-1))
+                if self.board[column-2][row]==0 and column==6:
+                    viable_moves.append((row,column-2))
+        return viable_moves
+
+    def king_attacks(self,column,row):
+        moves=[(1,0),(-1,0),(0,-1),(0,1),(1,1),(1,-1),(-1,1),(-1,-1)]
+        attacks=[]
+        for move in moves:
+            x=row+move[0]
+            y=column+move[1]
+            if x in range(0,8) and y in range(0,8):
+                attacks.append((x,y))
+        return attacks  
+
     def move_helper(self, position,line):
         range_of_piece=[0,0]
 
@@ -212,7 +251,7 @@ class setUp:
 
 chess=setUp()
 #print(chess.horizontal_moves(2,3))
-print(chess.board[4][3].attacks(chess))
+
 
 
                     
