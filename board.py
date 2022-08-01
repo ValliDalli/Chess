@@ -14,7 +14,7 @@ class setUp:
         white_rook_2 = Rook('r',7,0,'w')
         white_knight_1 = Knight('h',1,0,'w')#name is h and stands for horse, k is already taken for king
         white_knight_2 = Knight('h',6,0,'w')
-        white_bishop_1 = Bishop('b',6,2,'w')
+        white_bishop_1 = Bishop('b',5,2,'w')
         white_bishop_2 = Bishop('b',5,0,'w')
         white_queen = Queen('q',3,0,'w')
         white_king = King('k',4,0,'w')
@@ -188,7 +188,7 @@ class setUp:
                 row+=1
                 
             for i in range(position, row):
-                squares.append((column,i))
+                squares.append((i,column))
     
         return [attacks,squares]
     

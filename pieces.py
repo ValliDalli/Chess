@@ -151,7 +151,7 @@ class King(Piece):
         return setUp.king_attacks(self.get_col(),self.get_row())
     
     def get_moves (self, setUp):
-        position=(self.get_row(),self.get_row())
+        position=(self.get_row(),self.get_col())
         
         attacks=self.attacks(setUp)
         opponent_attacks=setUp.get_all_attacks(self.get_opponent_team())
@@ -160,10 +160,14 @@ class King(Piece):
                 attacks.remove(attack)
         for attack in attacks[:]:
             self.change_field(attack[0],attack[1],setUp)
+
             opponent_attacks=setUp.get_all_attacks(self.get_opponent_team())
             if attack in opponent_attacks:
                 attacks.remove(attack)
         self.change_field(position[0],position[1],setUp)
+        print(setUp.get_all_attacks(self.get_opponent_team()))
+        setUp.update_board()
+        setUp.display_board()
         return attacks
 
 
