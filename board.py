@@ -3,55 +3,66 @@ from pieces import Rook,Queen,Pawn,Bishop,King,Knight
 class setUp:
     def __init__(self):
         self.in_check=False
-        self.checkmate=False
+        
+        
+        
         
         self.white_captives=[]
         self.black_captives=[]
 
-        white_rook_1 = Rook('r',5,0,'w')
+        white_rook_1 = Rook('r',0,0,'w')
         white_rook_2 = Rook('r',7,0,'w')
         white_knight_1 = Knight('h',1,0,'w')#name is h and stands for horse, k is already taken for king
         white_knight_2 = Knight('h',6,0,'w')
-        white_bishop_1 = Bishop('b',3,3,'w')
+        white_bishop_1 = Bishop('b',6,2,'w')
         white_bishop_2 = Bishop('b',5,0,'w')
         white_queen = Queen('q',3,0,'w')
         white_king = King('k',4,0,'w')
+
+        
+
+        self.team='w'
+        self.enemy='b'
         
         white_pawns = []
         for i in range(8):
             white_pawns.append(Pawn('p',i,1,'w'))
         
-        black_rook_1 = Rook('r',0,7,'b')
-        black_rook_2 = Rook('r',7,7,'b')
+        black_rook_1 = Rook('r',0,0,'b')
+        black_rook_2 = Rook('r',0,1,'b')
         black_knight_1 = Knight('h',1,7,'b')#name is h and stands for horse, k is already taken for king
         black_knight_2 = Knight('h',6,7,'b')
         black_bishop_1 = Bishop('b',2,7,'b')
         black_bishop_2 = Bishop('b',5,7,'b')
         black_queen = Queen('q',3,7,'b')
-        black_king= King('k',0,0,'b')
+        black_king= King('k',4,4,'b')
         
+        self.pieces=[white_king,white_bishop_1]
+        self.pieces_enemy=[black_king,black_rook_1,black_rook_2]
+
         black_pawns = []
         for i in range(8):
             black_pawns.append(Pawn('p',i,6,'b'))
     
         
-        self.pieces_wight=[white_rook_1,white_pawns[0]]
-        self.pieces_black=[black_king]
-        self.board = [[white_rook_1, black_king, 0, 0, 0, 0, 0, 0],
-                  [white_pawns[0], 0, 0, 0, 0, 0, 0, 0],
+        
+        self.board = [[0, 0, 0, white_king, 0, 0, 0, 0],
+                  [black_rook_2, 0, 0, 0, 0, 0, 0, 0],
+                  [0, 0, white_bishop_1, 0, 0, 0, 0, 0],
                   [0, 0, 0, 0, 0, 0, 0, 0],
-                  [0, 0, 0, 0, 0, 0, 0, 0],
-                  [0, 0, 0, 0, 0, 0, 0, 0],
-                  [0, 0, 0, 0, 0, 0, 0, 0],
+                  [black_king, 0, 0, 0, 0, 0, 0, 0],
+                  [0, 0, 0, 0, black_rook_1, 0, 0, 0],
                   [0, 0,0, 0, 0, 0, 0, 0],
                   [0, 0, 0, 0,0, 0, 0, 0]
                   ]
-    def get_white_pieces(self):
-        return self.pieces_wight
     
-    def get_black_pieces(self):
-        return self.pieces_black
-    
+    def change_team(self):
+        temp1=self.team
+        temp2=self.pieces
+        self.team=self.enemy
+        self.pieces=self.pieces_enemy
+        self.enemy=temp1
+        self.pieces_enemy=temp2
 
     def update_board(self):#strupid function that will be removed later
         for column,series  in enumerate(self.board):
@@ -99,13 +110,43 @@ class setUp:
                 
 
         #returns all attacks of the team
-    def get_all_attacks(self,pieces):
+    def get_all_attacks(self,team):
         attacks=[]
-        
+        pieces=self.pieces if team=='w' else self.pieces_enemy
+
         for piece in pieces:
                 attacks.extend(piece.attacks(self))
 
-        return sorted(set(attacks)) 
+        return sorted(set(attacks))
+    def get_all_moves(self,team):
+        moves=[]
+        pieces=self.pieces if team=='w' else self.pieces_enemy
+
+        for piece in pieces[1:]:
+            moves.extend(piece.get_moves(self))
+        return moves
+    '''shows if it is possible to prevent a check by blocking or capturing the attacking piece'''
+    def prevent_check(self):
+        squares=[]
+        for piece in self.pieces_enemy:
+            squares.extend(piece.check_prevention())
+        return squares
+
+    
+    def checkmate(self):#tells you if the oponents team is in checkmate 
+        attacks=self.get_all_attacks(self.enemy) #moves from enemy
+        moves=self.get_all_moves(self.team)
+        king=self.pieces[0]
+        if king.get_coordinates() in attacks:#checks if the king is being attacked
+            self.in_check=True 
+            '''if the king can't move and no allied piece can prevent the check it is checkmate!'''
+            if not king.get_moves(self) and not bool(set(moves)&set(self.prevent_check())):
+                return True
+        return False
+            
+
+
+
 
      
     def friendly_fire_preventer(self, attacks: tuple,team):
@@ -137,13 +178,14 @@ class setUp:
             if square!=0 and square.get_name()=='k' and square.get_team()!=piece.get_team():
                 king = True
                 position=i
-            if (i,column)==(row,column):
-                position=i
         if king == True:
             if position>row:
                 temp=position
                 position=row
                 row=temp
+            else:
+                position+=1
+                row+=1
                 
             for i in range(position, row):
                 squares.append((column,i))
@@ -164,22 +206,26 @@ class setUp:
         squares=[]#squares that need to be occupied in order to prevent a checkmate
         piece=self.board[column][row]
         position=None
+        king=False
 
         range_interval_piece = self.move_helper(row,line)       
         for i in range(range_interval_piece[0],range_interval_piece[1]+1):
-            square=self.board[column][i]
+            square=self.board[i][row]
             if (i,column)!=(row,column):
                 attacks.append((row,i))
             if square!=0 and square.get_name()=='k' and square.get_team()!=piece.get_team():
                 king = True
                 position=i
-            if (i,column)==(row,column):
-                position=i
+            
         if king == True:
             if position>column:
                 temp=position
                 position=column
                 column=temp
+            else:
+                position+=1
+                column+=1
+            
             for i in range(position,column):
                 squares.append((row,i))
             
@@ -189,11 +235,14 @@ class setUp:
     #returns diagonal moves
     def diagonal1(self,column,row):
         #diagonal from left top to right bottom
-        
+        king=False
         start_row=0
         start_column=0
         range_interval_piece=[0,0]
         attacks=[]
+        squares=[]#squares that need to be occupied in order to prevent a checkmate
+        piece=self.board[column][row]
+        
 
 
         if row>column:
@@ -212,18 +261,41 @@ class setUp:
         range_interval_piece = self.move_helper(position,line)
         
         for i in range(range_interval_piece[0],range_interval_piece[1]+1):
+            square=self.board[start_row+i][start_column+i]
             if (start_row+i,start_column+i)!=(row,column):
                 attacks.append((start_row+i,start_column+i))
+            if square!=0 and square.get_name()=='k' and square.get_team()!=piece.get_team():
+                king = True
+                position1=i+start_row
+                position2=i+start_column
+        if king == True:
+            if position1>row:
+                temp=position1
+                position1=row
+                position2=column
+                row=temp
+            else:
+                position1+=1
+                position2+=1
+                row+=1
+            
+            for i in range(position1,row):#unfinished     
+                squares.append((i,position2))
+                position2+=1
+                
+        return [attacks,squares]
 
-        
-        return attacks
+
     def diagonal2(self,column,row):
         #diagonal starts at the left bottom to right top
-        
+        king=False
         start_row=0
         start_column=7
         range_interval_piece=[0,0]
         attacks=[]
+        squares=[]#squares that need to be occupied in order to prevent a checkmate
+        piece=self.board[column][row]
+        
         if row+column<7:
             start_column=row+column
             
@@ -241,11 +313,33 @@ class setUp:
         range_interval_piece = self.move_helper(position,line)
         
         for i in range(range_interval_piece[0],range_interval_piece[1]+1):
+
             if (start_row+i,start_column-i)!=(row,column):
                 attacks.append((start_row+i,start_column-i))
-
-        
-        return attacks
+                square=self.board[start_row+i][start_column-i]
+            if square!=0 and square.get_name()=='k' and square.get_team()!=piece.get_team():
+                king = True
+                position=i
+                position1=i+start_row
+                position2=start_column-i
+        if king == True:
+            if position1>row:
+                temp=position1
+                position1=row
+                position2=column
+                row=temp
+            else:
+                position1+=1
+                position2-=1
+                row+=1
+            
+            for i in range(position1,row):#unfinished
+                
+                squares.append((i,position2))
+                position2-=1
+                
+        return [attacks,squares]
+            
     
     def horse_moves(self,column,row):
         #all hores moves(horizontal,vertical)
@@ -331,20 +425,17 @@ class setUp:
         else:
             range_of_piece[1]=(position)
         return range_of_piece
-
-
-            
+        
 
 chess=setUp()
 
 chess.update_board()
 chess.display_board()
-liste=chess.get_all_attacks(chess.get_white_pieces())
-print(liste)
-print(f"all possible moves from white Rook: {chess.board[0][0].get_moves(chess)}")
-print(f"all possible moves from white pawn: {chess.board[1][0].get_moves(chess)}")
-valid=chess.board[0][5].get_moves(chess)
-print(f"King: {valid}")
+print(chess.checkmate())
+#liste=chess.get_all_attacks('b')
+#print(liste)
+#print(f"all possible moves from white Rook: {chess.get_white_pieces()[0].get_moves(chess)}")
+#print(f"all possible moves from black rook: {chess.get_black_pieces()[1].get_moves(chess)}")
 #print(f"squares that need to be taken in order to preven checkmate: {chess.board}")
 
 

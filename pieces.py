@@ -1,4 +1,5 @@
 
+import re
 from tabnanny import check
 from turtle import position
 from typing import Set
@@ -12,6 +13,7 @@ class Piece:
         self.name=name
         self.check=False
         self.attacked_fields=[]
+        self.king_attacks=[]#squares that need to be taken from the opponent to prevent check mate
         self.validmoves_fields=[]
         self.opponent_team='w'
         if self.team=='w':
@@ -33,8 +35,6 @@ class Piece:
     def get_name(self):
         return self.name
     
-    def get_attacks(self):
-        return self.attacked_fields
 
     
     def check(self,setUp):#finds out wether the piece attacks the oponents king
@@ -44,11 +44,15 @@ class Piece:
             if figur!=0 and figur.get_name()=='k' and figur.get_team()==self.get_opponent_team():
                 return True
         return False
+    def check_prevention(self):# finds out, if check can be prevented
+        return self.king_attacks
+        
+
             
     def attacks(self,setUp):
         pass
     def get_moves(self,setUp):
-        return setUp.friendly_fire_preventer(self.attacked_fields,self.team)
+        return setUp.friendly_fire_preventer(self.attacks(setUp),self.team)
 
     
     def change_field(self, new_row_num,new_col_num,setUp): #x
@@ -72,6 +76,10 @@ class Pawn(Piece):
     def attacks(self, setUp):
         self.attacked_fields.extend(setUp.pawn_attacks(self.get_col(),self.get_row(),self.get_team()))
         return self.attacked_fields
+    
+    def check_prevention(self,setUp):
+        if self.check(setUp):
+            return self.get_coordinates()
 
     
     def get_moves (self, setUp):
@@ -84,6 +92,9 @@ class Knight(Piece):
     def attacks(self, setUp):
         self.attacked_fields.extend(setUp.horse_moves(self.get_col(),self.get_row()))
         return self.attacked_fields
+    def check_prevention(self,setUp):
+        if self.check(setUp):
+            return self.get_coordinates()
         
         
         
@@ -93,16 +104,20 @@ class Bishop(Piece):
         super().__init__(name, row_number, col_number, team)
 
     def attacks(self,setUp):
-        self.attacked_fields.extend(setUp.diagonal1(self.get_col(),self.get_row()))
-        self.attacked_fields.extend(setUp.diagonal2(self.get_col(),self.get_row()))
+        diagonal1=(setUp.diagonal1(self.get_col(),self.get_row()))
+        diagonal2=(setUp.diagonal2(self.get_col(),self.get_row()))
+        self.attacked_fields = diagonal1[0]+diagonal2[0]
+        self.king_attacks=diagonal1[1]+diagonal2[1]
         return self.attacked_fields
         
 class Rook(Piece):
     def __init__(self, name, row_number, col_number, team):
         super().__init__(name, row_number, col_number, team)
     def attacks(self, setUp):
-        self.attacked_fields.extend(setUp.horizontal_moves(self.get_col(),self.get_row())[0])
-        self.attacked_fields.extend(setUp.vertical_moves(self.get_col(),self.get_row())[0])
+        horizontal = (setUp.horizontal_moves(self.get_col(),self.get_row()))
+        vertical = (setUp.vertical_moves(self.get_col(),self.get_row()))
+        self.attacked_fields=horizontal[0]+vertical[0]
+        self.king_attacks=horizontal[1]+vertical[1]
         return self.attacked_fields
 
 
@@ -112,10 +127,15 @@ class Queen(Piece):
     def __init__(self, name, row_number, col_number, team):
         super().__init__(name, row_number, col_number, team)
     def attacks(self,setUp):
-        self.attacked_fields.extend(setUp.diagonal1(self.get_col(),self.get_row()))
-        self.attacked_fields.extend(setUp.diagonal2(self.get_col(),self.get_row()))
-        self.attacked_fields.extend(setUp.horizontal_moves(self.get_col(),self.get_row())[0])
-        self.attacked_fields.extend(setUp.vertical_moves(self.get_col(),self.get_row())[0])
+        horizontal = (setUp.horizontal_moves(self.get_col(),self.get_row()))
+        vertical = (setUp.vertical_moves(self.get_col(),self.get_row()))
+        self.attacked_fields=horizontal[0]+vertical[0]
+        self.king_attacks=horizontal[1]+vertical[1]
+        diagonal1=(setUp.diagonal1(self.get_col(),self.get_row()))
+        diagonal2=(setUp.diagonal2(self.get_col(),self.get_row()))
+        self.attacked_fields = diagonal1[0]+diagonal2[0]
+        self.king_attacks=diagonal1[1]+diagonal2[1]
+
         return self.attacked_fields     
 
 class King(Piece):
