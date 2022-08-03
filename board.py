@@ -29,20 +29,22 @@ class setUp:
             white_pawns.append(Pawn('p',i,1,'w'))
         
         black_rook_1 = Rook('r',0,0,'b')
-        black_rook_2 = Rook('r',0,1,'b')
+        black_rook_2 = Rook('r',5,1,'b')
         black_knight_1 = Knight('h',1,7,'b')#name is h and stands for horse, k is already taken for king
         black_knight_2 = Knight('h',6,7,'b')
-        black_bishop_1 = Bishop('b',2,7,'b')
+        black_bishop_1 = Bishop('b',4,1,'b')
         black_bishop_2 = Bishop('b',5,7,'b')
         black_queen = Queen('q',3,7,'b')
         black_king= King('k',4,4,'b')
-        
-        self.pieces=[white_king,white_bishop_1]
-        self.pieces_enemy=[black_king,black_rook_1,black_rook_2]
 
         black_pawns = []
         for i in range(8):
             black_pawns.append(Pawn('p',i,6,'b'))
+        
+        self.pieces=[white_king,white_bishop_1]
+        self.pieces_enemy=[black_king,black_rook_1,black_rook_2,black_bishop_1]
+
+        
     
         
         
@@ -63,13 +65,22 @@ class setUp:
         self.pieces=self.pieces_enemy
         self.enemy=temp1
         self.pieces_enemy=temp2
+    
+    def move(self,piece,newCoordinates):
+        square=self.board[newCoordinates[1]][newCoordinates[0]]
+        if piece.change_field(newCoordinates[0],newCoordinates[1],self):
+            if square!=0:
+                self.pieces_enemy.remove(square)#remove enemy piece because it was captured
+                self.board[newCoordinates[1]][newCoordinates[0]]=piece
+        
 
-    def update_board(self):#strupid function that will be removed later
-        for column,series  in enumerate(self.board):
-            for row,square in enumerate(series):
-                if square !=0 and square.get_coordinates()!=(row,column):#get_coordinates(
-                    self.board[column][row]=0
-                    self.board[square.get_col()][square.get_row()]=square
+    def create_pieces(self):
+        self.board=[[0 for i in range(8)]for i in range(8)]
+        
+        for piece in self.pieces:  
+            self.board[piece.get_col()][piece.get_row()]=piece
+        for piece in self.pieces_enemy:
+            self.board[piece.get_col()][piece.get_row()]=piece
 
     def display_board(self):
         Brett=[[0, 0, 0, 0, 0, 0, 0, 0],
@@ -429,9 +440,11 @@ class setUp:
 
 chess=setUp()
 
-chess.update_board()
+chess.create_pieces()
 chess.display_board()
-print(chess.checkmate())
+chess.move(chess.pieces[0],(4,1))
+chess.display_board()
+#print(chess.checkmate())
 #liste=chess.get_all_attacks('b')
 #print(liste)
 #print(f"all possible moves from white Rook: {chess.get_white_pieces()[0].get_moves(chess)}")

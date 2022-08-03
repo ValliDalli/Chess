@@ -1,8 +1,4 @@
 
-import re
-from tabnanny import check
-from turtle import position
-from typing import Set
 
 
 class Piece:
@@ -56,13 +52,15 @@ class Piece:
 
     
     def change_field(self, new_row_num,new_col_num,setUp): #x
-        setUp.board[self.col_number][self.row_number]=0
-        self.row_number=new_row_num
-        self.col_number=new_col_num
-        setUp.board[new_col_num][new_row_num]=self
+        if (new_row_num,new_col_num) in self.get_moves(setUp):
+            setUp.board[self.col_number][self.row_number]=0
+            self.row_number=new_row_num
+            self.col_number=new_col_num
+            return True
+        else:
+            return False
     
-    def change_column(self, new_col_num): #y
-        self.col_number=new_col_num
+
     
 
 
@@ -83,7 +81,7 @@ class Pawn(Piece):
 
     
     def get_moves (self, setUp):
-     self.validmoves_fields.extend(setUp.pawn_moves(self.get_attacks(),self.get_col(),self.get_row(),self.get_team()))
+     self.validmoves_fields.extend(setUp.pawn_moves(self.attacked_fields,self.get_col(),self.get_row(),self.get_team()))
      return self.validmoves_fields
 
 class Knight(Piece):
@@ -154,20 +152,14 @@ class King(Piece):
         position=(self.get_row(),self.get_col())
         
         attacks=self.attacks(setUp)
+        
+        setUp.board[self.get_col()][self.get_row()]=0
         opponent_attacks=setUp.get_all_attacks(self.get_opponent_team())
-        for attack in attacks:
-            if attack in opponent_attacks[:]:
-                attacks.remove(attack)
         for attack in attacks[:]:
-            self.change_field(attack[0],attack[1],setUp)
-
-            opponent_attacks=setUp.get_all_attacks(self.get_opponent_team())
-            if attack in opponent_attacks:
+            square=setUp.board[attack[1]][attack[0]]
+            if attack in opponent_attacks[:] or square!=0 and square.get_team()==self.get_team():
                 attacks.remove(attack)
-        self.change_field(position[0],position[1],setUp)
-        print(setUp.get_all_attacks(self.get_opponent_team()))
-        setUp.update_board()
-        setUp.display_board()
+        setUp.board[self.get_col()][self.get_row()]=self
         return attacks
 
 
