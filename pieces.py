@@ -8,6 +8,7 @@ class Piece:
         self.col = col
         self.team = team
         self.name=name
+        self.all_moves=[]
         self.check=False
         self.attacked_fields=[]
         self.king_attacks=[]#squares that need to be taken from the opponent to prevent check mate
@@ -61,12 +62,16 @@ class Piece:
             
     def attacks(self,setUp):
         pass
-    def get_moves(self,setUp):
+    def moves(self,setUp):
         moves=setUp.friendly_fire_preventer(self.attacks(setUp),self.team)
         if setUp.in_check:
-            return self.special_moves(moves,setUp.check_prevent)
-        else:
-            return moves
+            moves=self.special_moves(moves,setUp.check_prevent)
+        self.all_moves=moves
+        return moves
+
+
+    def get_moves(self):
+        return self.all_moves
     
 
     
@@ -187,9 +192,8 @@ class King(Piece):
     
     def attacks(self, setUp):
         return setUp.king_attacks(self.get_col(),self.get_row())
-    
-    def get_moves (self, setUp):
-        
+
+    def moves(self, setUp):
         attacks=self.attacks(setUp)
         
         setUp.board[self.get_col()][self.get_row()]=0
@@ -203,6 +207,7 @@ class King(Piece):
             attacks.append((2,self.col))
         if self.castling_right(setUp):
             attacks.append((6,self.col))
+        self.all_moves=attacks
         return attacks
 
     def castling_right(self,setUp):

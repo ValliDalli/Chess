@@ -65,10 +65,16 @@ class setUp:
         self.pieces=self.pieces_enemy
         self.enemy=temp1
         self.pieces_enemy=temp2
-        self.in_check=self.checkmate()
-        
-        
+        self.in_check=False
+        self.check_prevent=[]
     
+    def remis(self):#must called after the method checkmate was called
+        status=True
+        for piece in self.pieces:
+            if piece.moves(self):
+                status=False
+        return status
+
     def move(self,piece,newCoordinates):
         square=self.board[newCoordinates[1]][newCoordinates[0]]
         if piece.change_field(newCoordinates[0],newCoordinates[1],self):#check must be considered
@@ -140,7 +146,7 @@ class setUp:
         pieces=self.pieces if team=='w' else self.pieces_enemy
 
         for piece in pieces[1:]:
-            moves.extend(piece.get_moves(self))
+            moves.extend(piece.get_moves())
         return moves
     '''shows if it is possible to prevent a check by blocking or capturing the attacking piece'''
     def prevent_check(self):
@@ -159,7 +165,7 @@ class setUp:
             self.in_check=True 
             self.prevent_check()
             '''if the king can't move and no allied piece can prevent the check it is checkmate!'''
-            if not king.get_moves(self) and not bool(set(moves)&set(self.prevent_check())):
+            if not king.get_moves()and not bool(set(moves)&set(self.prevent_check())):
                 return True
         return False
             
@@ -451,9 +457,10 @@ chess=setUp()
 chess.create_pieces()
 chess.display_board()
 chess.checkmate()
-king=chess.pieces[0].get_moves(chess)
-rook1=chess.pieces[1].get_moves(chess)
-rook2=chess.pieces[2].get_moves(chess)
+print(chess.remis())
+king=chess.pieces[0].get_moves()
+rook1=chess.pieces[1].get_moves()
+rook2=chess.pieces[2].get_moves()
 
 print(f"the Rook on the righ side has as moves:{rook1}")
 print(f"the Rook on the left side has as moves:{rook2}")
