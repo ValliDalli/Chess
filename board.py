@@ -6,18 +6,18 @@ class setUp:
         
         
         
-        
+        self.check_prevent=[]#squares that must be taken in order to prevent check 
         self.white_captives=[]
         self.black_captives=[]
 
-        white_rook_1 = Rook('r',0,0,'w')
-        white_rook_2 = Rook('r',7,0,'w')
+        white_rook_1 = Rook('r',7,6,'w')
+        white_rook_2 = Rook('r',0,7,'w')
         white_knight_1 = Knight('h',1,0,'w')#name is h and stands for horse, k is already taken for king
         white_knight_2 = Knight('h',6,0,'w')
         white_bishop_1 = Bishop('b',5,2,'w')
         white_bishop_2 = Bishop('b',5,0,'w')
         white_queen = Queen('q',3,0,'w')
-        white_king = King('k',4,0,'w')
+        white_king = King('k',4,7,'w')
 
         
 
@@ -28,32 +28,32 @@ class setUp:
         for i in range(8):
             white_pawns.append(Pawn('p',i,1,'w'))
         
-        black_rook_1 = Rook('r',0,0,'b')
+        black_rook_1 = Rook('r',4,5,'b')
         black_rook_2 = Rook('r',5,1,'b')
         black_knight_1 = Knight('h',1,7,'b')#name is h and stands for horse, k is already taken for king
         black_knight_2 = Knight('h',6,7,'b')
         black_bishop_1 = Bishop('b',4,1,'b')
         black_bishop_2 = Bishop('b',5,7,'b')
-        black_queen = Queen('q',3,7,'b')
+        black_queen = Queen('q',4,2,'b')
         black_king= King('k',4,4,'b')
 
         black_pawns = []
         for i in range(8):
             black_pawns.append(Pawn('p',i,6,'b'))
         
-        self.pieces=[white_king,white_bishop_1]
-        self.pieces_enemy=[black_king,black_rook_1,black_rook_2,black_bishop_1]
+        self.pieces=[white_king,white_rook_1,white_rook_2]
+        self.pieces_enemy=[black_king,black_rook_1]
 
         
     
         
         
-        self.board = [[0, 0, 0, white_king, 0, 0, 0, 0],
-                  [black_rook_2, 0, 0, 0, 0, 0, 0, 0],
-                  [0, 0, white_bishop_1, 0, 0, 0, 0, 0],
+        self.board = [[0, 0, 0, 0, 0, 0, 0, 0],
                   [0, 0, 0, 0, 0, 0, 0, 0],
-                  [black_king, 0, 0, 0, 0, 0, 0, 0],
-                  [0, 0, 0, 0, black_rook_1, 0, 0, 0],
+                  [0, 0, 0, 0, 0, 0, 0, 0],
+                  [0, 0, 0, 0, 0, 0, 0, 0],
+                  [0, 0, 0, 0, 0, 0, 0, 0],
+                  [0, 0, 0, 0, 0, 0, 0, 0],
                   [0, 0,0, 0, 0, 0, 0, 0],
                   [0, 0, 0, 0,0, 0, 0, 0]
                   ]
@@ -65,13 +65,19 @@ class setUp:
         self.pieces=self.pieces_enemy
         self.enemy=temp1
         self.pieces_enemy=temp2
+        self.in_check=self.checkmate()
+        
+        
     
     def move(self,piece,newCoordinates):
         square=self.board[newCoordinates[1]][newCoordinates[0]]
-        if piece.change_field(newCoordinates[0],newCoordinates[1],self):
+        if piece.change_field(newCoordinates[0],newCoordinates[1],self):#check must be considered
             if square!=0:
                 self.pieces_enemy.remove(square)#remove enemy piece because it was captured
-                self.board[newCoordinates[1]][newCoordinates[0]]=piece
+            self.board[newCoordinates[1]][newCoordinates[0]]=piece
+    
+    
+        
         
 
     def create_pieces(self):
@@ -141,6 +147,7 @@ class setUp:
         squares=[]
         for piece in self.pieces_enemy:
             squares.extend(piece.check_prevention())
+        self.check_prevent=squares
         return squares
 
     
@@ -150,6 +157,7 @@ class setUp:
         king=self.pieces[0]
         if king.get_coordinates() in attacks:#checks if the king is being attacked
             self.in_check=True 
+            self.prevent_check()
             '''if the king can't move and no allied piece can prevent the check it is checkmate!'''
             if not king.get_moves(self) and not bool(set(moves)&set(self.prevent_check())):
                 return True
@@ -207,7 +215,7 @@ class setUp:
 
 
     #returns alll horizontal squares the piece can move to
-    def vertical_moves(self,column,row):
+    def vertical_moves(self,column,row):#suspicious
         line=[]
         for i in range(8):
             line.append(self.board[i][row])
@@ -219,7 +227,7 @@ class setUp:
         position=None
         king=False
 
-        range_interval_piece = self.move_helper(row,line)       
+        range_interval_piece = self.move_helper(column,line)       
         for i in range(range_interval_piece[0],range_interval_piece[1]+1):
             square=self.board[i][row]
             if (i,column)!=(row,column):
@@ -407,7 +415,7 @@ class setUp:
                 attacks.append((x,y))
         return attacks  
 
-    def move_helper(self, position,line):
+    def move_helper(self, position,line):#problem
         range_of_piece=[0,0]
 
         left=(line[0:position])
@@ -442,14 +450,16 @@ chess=setUp()
 
 chess.create_pieces()
 chess.display_board()
-chess.move(chess.pieces[0],(4,1))
-chess.display_board()
-#print(chess.checkmate())
-#liste=chess.get_all_attacks('b')
-#print(liste)
-#print(f"all possible moves from white Rook: {chess.get_white_pieces()[0].get_moves(chess)}")
-#print(f"all possible moves from black rook: {chess.get_black_pieces()[1].get_moves(chess)}")
-#print(f"squares that need to be taken in order to preven checkmate: {chess.board}")
+chess.checkmate()
+king=chess.pieces[0].get_moves(chess)
+rook1=chess.pieces[1].get_moves(chess)
+rook2=chess.pieces[2].get_moves(chess)
+
+print(f"the Rook on the righ side has as moves:{rook1}")
+print(f"the Rook on the left side has as moves:{rook2}")
+print(f"the King has as moves:{king}")
+
+
 
 
 
