@@ -92,8 +92,10 @@ class Piece:
       
 
 class Pawn(Piece):
+    
     def __init__(self, name, row, col, team):
         super().__init__(name, row, col, team)
+        self.end_col=7 if self.team=='w' else 0
         
     
     def attacks(self, setUp):
@@ -105,13 +107,25 @@ class Pawn(Piece):
             return self.get_coordinates()
 
     
-    def get_moves (self, setUp):
-    
-     moves=(setUp.pawn_moves(self.attacked_fields,self.get_col(),self.get_row(),self.get_team()))
-     if setUp.in_check:
-            return self.special_moves(moves,setUp.check_prevent)
-     else:
+    def moves (self, setUp):
+        moves=(setUp.pawn_moves(self.attacked_fields,self.get_col(),self.get_row(),self.get_team()))
+        if setUp.in_check:
+            moves=self.special_moves(moves,setUp.check_prevent)
+        self.moves=moves
         return moves
+    
+    def change_field(self, new_row_num,new_col_num,setUp): #x
+        if (new_row_num,new_col_num) in self.get_moves():
+            setUp.board[self.col][self.row]=0
+            self.row=new_row_num
+            self.col=new_col_num
+            self.has_moved=True
+            if new_row_num==self.end_col:
+                setUp.promote(self)
+            return True
+        else:
+            return False
+   
 
 class Knight(Piece):
     def __init__(self, name, row, col, team):

@@ -26,9 +26,9 @@ class setUp:
         
         white_pawns = []
         for i in range(8):
-            white_pawns.append(Pawn('p',i,1,'w'))
+            white_pawns.append(Pawn('p',i,6,'w'))
         
-        black_rook_1 = Rook('r',4,5,'b')
+        black_rook_1 = Rook('r',1,0,'b')
         black_rook_2 = Rook('r',5,1,'b')
         black_knight_1 = Knight('h',1,7,'b')#name is h and stands for horse, k is already taken for king
         black_knight_2 = Knight('h',6,7,'b')
@@ -41,7 +41,7 @@ class setUp:
         for i in range(8):
             black_pawns.append(Pawn('p',i,6,'b'))
         
-        self.pieces=[white_king,white_rook_1,white_rook_2]
+        self.pieces=[white_king,white_rook_1,white_rook_2,white_pawns[3]]
         self.pieces_enemy=[black_king,black_rook_1]
 
         
@@ -78,9 +78,13 @@ class setUp:
     def move(self,piece,newCoordinates):
         square=self.board[newCoordinates[1]][newCoordinates[0]]
         if piece.change_field(newCoordinates[0],newCoordinates[1],self):#check must be considered
+            
             if square!=0:
                 self.pieces_enemy.remove(square)#remove enemy piece because it was captured
             self.board[newCoordinates[1]][newCoordinates[0]]=piece
+            return True
+        return False
+    
     
     
         
@@ -126,6 +130,11 @@ class setUp:
 
         
 
+    def promote(self,piece):
+        pos=piece.get_coordinates()
+        queen=Queen('q',pos[0],pos[1],self.team)
+        self.pieces.remove(piece)
+        self.board[pos[1]][pos[0]]=queen
 
     
 
@@ -401,13 +410,13 @@ class setUp:
         if team =='w' and column!=7:
             if self.board[column+1][row]==0:
                 viable_moves.append((row,column+1))
-                if self.board[column+2][row]==0 and column==1:
+                if column==1 and self.board[column+2][row]==0:
                     viable_moves.append((row,column+2))
 
         if team =='b'and column!=0:
             if self.board[column-1][row]==0:
                 viable_moves.append((row,column-1))
-                if self.board[column-2][row]==0 and column==6:
+                if column==6 and self.board[column-2][row]==0 :
                     viable_moves.append((row,column-2))
         return viable_moves
 
@@ -457,14 +466,14 @@ chess=setUp()
 chess.create_pieces()
 chess.display_board()
 chess.checkmate()
-print(chess.remis())
+chess.remis()
 king=chess.pieces[0].get_moves()
 rook1=chess.pieces[1].get_moves()
 rook2=chess.pieces[2].get_moves()
+pawn=chess.pieces[3].get_moves()
+print(chess.move(chess.pieces[3],(3,7)))
+chess.display_board()
 
-print(f"the Rook on the righ side has as moves:{rook1}")
-print(f"the Rook on the left side has as moves:{rook2}")
-print(f"the King has as moves:{king}")
 
 
 
